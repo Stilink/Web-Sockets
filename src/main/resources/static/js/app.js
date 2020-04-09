@@ -1,15 +1,14 @@
 var app = (function () {
-
-    class Point{
-        constructor(x,y){
-            this.x=x;
-            this.y=y;
-        }        
+    class Point {
+        constructor(x, y) {
+            this.x = x;
+            this.y = y;
+        }
     }
-    
-    var stompClient = null;
 
-    var addPointToCanvas = function (point) {   
+    var stompClient = null;
+    var topic = ""
+    var addPointToCanvas = function (point) {
         console.info('Intentando postear el nuevo punto');
         var canvas = document.getElementById("myCanvas");
         var ctx = canvas.getContext("2d");
@@ -17,8 +16,8 @@ var app = (function () {
         ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
         ctx.stroke();
     };
-    
-    
+
+
     var getMousePosition = function (evt) {
         canvas = document.getElementById("myCanvas");
         var rect = canvas.getBoundingClientRect();
@@ -29,41 +28,40 @@ var app = (function () {
     };
 
 
-    var connectAndSubscribe = function () {
+    var connect = function () {
         console.info('Connecting to WS...');
         var socket = new SockJS('/stompendpoint');
         stompClient = Stomp.over(socket);
-        
-        //subscribe to /topic/TOPICXX when connections succeed
         stompClient.connect({}, function (frame) {
             console.log('Connected: ' + frame);
-            stompClient.subscribe('/topic/newpoint', function (eventbody) {
-                let newPoint = JSON.parse(eventbody.body);
-                addPointToCanvas(newPoint);
-            });
+
+        });
+    };
+
+    var subscribe = (id) => {
+        console.log(stompClient)
+        topic = '/topic/newpoint/' + id
+        alert("pulse aca y me subscribi a" + topic)
+        stompClient.subscribe(topic, function (eventbody) {
+            let newPoint = JSON.parse(eventbody.body);
+            addPointToCanvas(newPoint);
         });
 
-    };
-    
-    
+    }
 
     return {
 
         init: function () {
             var can = document.getElementById("myCanvas");
-            
-            //websocket connection
-            connectAndSubscribe();
+            connect();
         },
 
-        publishPoint: function(px,py){
-            var pt=new Point(px,py);
-            console.info("publishing point at "+pt);
+        publishPoint: function (px, py) {
+            var pt = new Point(px, py);
+            console.info("publishing point at " + pt);
             addPointToCanvas(pt);
-
-            //publicar el evento
-            console.info('Enviando punto...');
-            stompClient.send("/topic/newpoint", {}, JSON.stringify(pt));
+            console.info('Enviando punto a ' + topic + '...');
+            stompClient.send(topic, {}, JSON.stringify(pt));
         },
 
         disconnect: function () {
@@ -72,6 +70,10 @@ var app = (function () {
             }
             setConnected(false);
             console.log("Disconnected");
+        },
+        clickSubscribe: () => {
+            var idNum = document.getElementById("num").value
+            subscribe(idNum)
         }
     };
 
