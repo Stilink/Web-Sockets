@@ -39,9 +39,9 @@ var app = (function () {
     };
 
     var subscribe = (id) => {
-        console.log(stompClient)
-        topic = '/topic/newpoint/' + id
-        alert("pulse aca y me subscribi a" + topic)
+        //console.log(stompClient)
+        topic = '/app/newpoint/' + id
+        console.log("pulse aca y me subscribi a" + topic)
         stompClient.subscribe(topic, function (eventbody) {
             let newPoint = JSON.parse(eventbody.body);
             addPointToCanvas(newPoint);
